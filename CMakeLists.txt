@@ -36,14 +36,19 @@ set(LIBRARY_DIR ${INSTALL_DIR}/lib${LIB_SUFFIX})
 include_directories(${INCLUDE_DIR}
                     ${INCLUDE_DIR}/cjson
                     ${INCLUDE_DIR}/trower-base64)
-include_directories (SYSTEM /usr/include
-if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-                            /usr/local/opt/openssl/include
-endif()
-)
-link_directories ( ${LIBRARY_DIR} )
+include_directories (SYSTEM /usr/include /opt/openssl/1.1/include)
+link_directories ( ${LIBRARY_DIR} /opt/openssl/1.1/lib)
 
 if (NOT BUILD_YOCTO)
+
+# check external dependency
+ExternalProject_Add(check
+    PREFIX ${PREFIX_DIR}/check
+    GIT_REPOSITORY https://github.com/libcheck/check.git
+    GIT_TAG "2d77d16ff2f038b99c36e658ec0ea1ddea79b9ed"
+    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} -DBUILD_TESTING=OFF)
+add_library(libcheck STATIC IMPORTED)
+add_dependencies(libcheck check)
 
 # base64 external dependency
 ExternalProject_Add(trower-base64
