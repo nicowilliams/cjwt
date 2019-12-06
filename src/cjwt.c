@@ -421,7 +421,36 @@ static int cjwt_update_payload( cjwt_t *p_cjwt, char *p_decpl )
     j_val = cJSON_GetObjectItem( j_payload, "aud" );
 
     if( j_val ) {
-        if( j_val->type == cJSON_Object ) {
+        if( j_val->type == cJSON_String ) {
+            //lone string
+            p_cjwt->aud = calloc( 1, sizeof( *p_cjwt->aud ) );
+
+            if( !p_cjwt->aud ) {
+                cJSON_Delete( j_payload );
+                return ENOMEM;
+            }
+
+            p_cjwt->aud->names = calloc( 1, sizeof( *p_cjwt->aud->names ) );
+
+            if( !p_cjwt->aud->names ) {
+                cJSON_Delete( j_payload );
+                free( p_cjwt->aud );
+                p_cjwt->aud = NULL;
+                return ENOMEM;
+            }
+
+            p_cjwt->aud->names[0] = strdup( j_val->valuestring );
+
+            if( !p_cjwt->aud->names[0] ) {
+                cJSON_Delete( j_payload );
+                free( p_cjwt->aud->names );
+                free( p_cjwt->aud );
+                p_cjwt->aud = NULL;
+                return ENOMEM;
+            }
+
+            p_cjwt->aud->count = 1;
+        } else if( j_val->type == cJSON_Array ) {
             //array of strings
             cJSON*  j_tmp = NULL;
             int     cnt, i = 0;
